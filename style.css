@@ -54,6 +54,21 @@ button.small-button {
   padding: 6px 10px;
   font-size: 0.9em;
 }
+
+/* Nhóm số tiền và các nút trên cùng một dòng */
+.amount-group {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Khoảng cách giữa các phần tử */
+}
+
+/* Điều chỉnh kích thước các nút */
+.small-button {
+  padding: 5px 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
 /* Hóa đơn */
 #receipt {
   margin-top: 20px;
@@ -61,8 +76,10 @@ button.small-button {
   background-color: white;
   border: 1px solid #ccc;
   border-radius: 5px;
-  width: 560px; /* Cố định chiều rộng */
+  /*width: 560px; /* Cố định chiều rộng */
+  overflow: hidden; /* Ẩn hoàn toàn thanh cuộn */
 }
+
 .invoice-header,
 .invoice-details,
 .student-info,
