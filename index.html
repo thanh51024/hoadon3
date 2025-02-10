@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Tạo Biên Lai Học Phí</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Form nhập liệu (luôn hiển thị) -->
+    <div class="card" id="formContainer">
+      <h2>Nhập Thông Tin Học Phí</h2>
+      <div class="form-group">
+        <label for="studentName">Họ tên học sinh:</label>
+        <input
+          type="text"
+          id="studentName"
+          placeholder="Nhập họ tên học sinh"
+        />
+      </div>
+      <div class="form-group">
+        <label for="className">Lớp:</label>
+        <input type="text" id="className" placeholder="Nhập lớp" />
+      </div>
+      <div class="form-group flex-group">
+        <div style="flex: 1">
+          <label for="amount">Số tiền (VNĐ):</label>
+          <input type="number" id="amount" value="500000" />
+        </div>
+        <button id="increaseAmount" class="small-button">+100K</button>
+        <button id="decreaseAmount" class="small-button">-100K</button>
+      </div>
+      <div class="form-group">
+        <label for="dates">Ngày học (VD: 2/1 3/1 10/1 12/1):</label>
+        <input type="text" id="dates" placeholder="Nhập ngày học" />
+      </div>
+      <div class="form-group">
+        <button id="generateReceipt">Tạo Biên Lai</button>
+      </div>
+    </div>
+
+    <!-- Container hiển thị hóa đơn (ban đầu ẩn) -->
+    <div class="card" id="invoiceContainer" style="display: none">
+      <div id="receipt">
+        <!-- Nội dung hóa đơn sẽ được tạo động qua JavaScript -->
+      </div>
+      <div class="button-container">
+        <button id="downloadButton" class="button">Tải Biên Lai</button>
+        <button id="resetButton" class="button">Biên Lai Mới</button>
+      </div>
+    </div>
+
+    <!-- Thư viện html-to-image (đảm bảo được tải trước mã custom) -->
+    <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.10.5/dist/html-to-image.min.js"></script>
+    <!-- Thư viện downloadjs -->
+    <script src="https://unpkg.com/downloadjs"></script>
+
+    <script src="script.js"></script>
+  </body>
+</html>
