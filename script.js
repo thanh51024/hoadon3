@@ -154,7 +154,7 @@ document.addEventListener("DOMContentLoaded", function () {
       html += "<br>";
       html += '<div class="qr-section">';
       html += "<h4>Quét mã để thanh toán</h4>";
-      html += '<img src="qr.png" alt="QR Code"/>';
+      html += '<img src="./qr.png" alt="QR Code"/>';
       html += '<p style="margin: 2px 0;">Vietcombank</p>';
       html += '<p style="margin: 2px 0;">1020102766</p>';
       html += '<p style="margin: 2px 0;">Nguyen Hue Thien</p>';
@@ -164,6 +164,39 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Nút "Tải hóa đơn":
+  // downloadButton.addEventListener("click", function () {
+  //   if (
+  //     !invoiceContainer.style.display ||
+  //     invoiceContainer.style.display === "none"
+  //   ) {
+  //     alert("⚠ Không có dữ liệu hóa đơn để tải xuống!");
+  //     return;
+  //   }
+  //   const now = new Date();
+  //   const month = now.getMonth() + 1;
+  //   const year = now.getFullYear();
+
+  //   const fileName = `${currentStudentName.replace(
+  //     /\s+/g,
+  //     "_"
+  //   )}_bien_lai_${month}_${year}.png`;
+
+  //   htmlToImage
+  //     .toPng(receiptDiv, { quality: 1, pixelRatio: 2 })
+  //     .then(function (dataUrl) {
+  //       const link = document.createElement("a");
+  //       link.href = dataUrl;
+  //       link.download = fileName;
+  //       document.body.appendChild(link);
+  //       link.click();
+  //       document.body.removeChild(link);
+  //     })
+  //     .catch(function (error) {
+  //       console.error("❌ Lỗi khi tạo ảnh:", error);
+  //       alert("Không thể tạo ảnh hóa đơn. Vui lòng thử lại!");
+  //     });
+  // });
+
   downloadButton.addEventListener("click", function () {
     if (
       !invoiceContainer.style.display ||
@@ -172,6 +205,7 @@ document.addEventListener("DOMContentLoaded", function () {
       alert("⚠ Không có dữ liệu hóa đơn để tải xuống!");
       return;
     }
+
     const now = new Date();
     const month = now.getMonth() + 1;
     const year = now.getFullYear();
@@ -181,21 +215,34 @@ document.addEventListener("DOMContentLoaded", function () {
       "_"
     )}_bien_lai_${month}_${year}.png`;
 
-    htmlToImage
-      .toPng(receiptDiv, { quality: 1, pixelRatio: 2 })
-      .then(function (dataUrl) {
+    // Đảm bảo ảnh QR được tải hoàn toàn trước khi chụp
+    const qrImg = document.querySelector("#receipt img");
+    if (qrImg && !qrImg.complete) {
+      qrImg.onload = () => captureReceipt(fileName);
+    } else {
+      captureReceipt(fileName);
+    }
+  });
+
+  function captureReceipt(fileName) {
+    html2canvas(receiptDiv, {
+      scale: 2, // Độ phân giải cao hơn
+      useCORS: true, // Hỗ trợ ảnh từ nguồn bên ngoài
+      backgroundColor: "#fff", // Đảm bảo nền trắng
+    })
+      .then((canvas) => {
         const link = document.createElement("a");
-        link.href = dataUrl;
+        link.href = canvas.toDataURL("image/png");
         link.download = fileName;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
       })
-      .catch(function (error) {
+      .catch((error) => {
         console.error("❌ Lỗi khi tạo ảnh:", error);
         alert("Không thể tạo ảnh hóa đơn. Vui lòng thử lại!");
       });
-  });
+  }
 
   // Nút "+100k":
   increaseButton.addEventListener("click", function () {
