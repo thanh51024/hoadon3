@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Lấy các phần tử DOM
   const excelDataInput = document.getElementById("excelData");
   const classNameInput = document.getElementById("className");
   const amountInput = document.getElementById("amount");
@@ -9,194 +8,188 @@ document.addEventListener("DOMContentLoaded", function () {
   const invoiceContainer = document.getElementById("invoiceContainer");
   const receiptDiv = document.getElementById("receipt");
   const downloadButton = document.getElementById("downloadButton");
-  const resetButton = document.getElementById("resetButton");
 
-  // Các biến lưu thông tin tính toán
-  let sortedDates = [];
-  let totalSessions = 0;
-  let startDate = "";
-  let endDate = "";
-
-  // Tạo biến toàn cục để lưu tên học sinh
+  let studentName = "";
   let currentStudentName = "";
 
-  // Xử lý tăng số tiền
-  increaseButton.addEventListener("click", function () {
-    let currentAmount = parseInt(amountInput.value, 10) || 0;
-    currentAmount += 100000;
-    amountInput.value = currentAmount;
-  });
+  function isLeapYear(year) {
+    return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+  }
 
-  // Xử lý giảm số tiền (không giảm xuống dưới 100000)
-  decreaseButton.addEventListener("click", function () {
-    let currentAmount = parseInt(amountInput.value, 10) || 0;
-    currentAmount = Math.max(100000, currentAmount - 100000);
-    amountInput.value = currentAmount;
-  });
+  function isValidDate(day, month, year) {
+    const daysInMonth = [
+      31,
+      isLeapYear(year) ? 29 : 28,
+      31,
+      30,
+      31,
+      30,
+      31,
+      31,
+      30,
+      31,
+      30,
+      31,
+    ];
+    return (
+      month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth[month - 1]
+    );
+  }
 
-  // Khi nhấn nút "Tạo Biên Lai"
   generateButton.addEventListener("click", function () {
     const excelData = excelDataInput.value.trim();
     const className = classNameInput.value.trim();
     const amount = parseInt(amountInput.value, 10) || 0;
 
-    // Kiểm tra dữ liệu bắt buộc: excelData, lớp và số tiền
-    if (!excelData || !className || !amount) {
-      alert(
-        "⚠️ Vui lòng nhập đầy đủ thông tin (dữ liệu Excel, lớp và số tiền)!"
-      );
-      return;
-    }
+    studentName = "";
+    currentStudentName = studentName;
 
-    // Phân tách chuỗi từ Excel theo ký tự tab
-    const parts = excelData.split(/\t+/).filter(Boolean);
-    if (parts.length < 2) {
-      alert(
-        "❌ Dữ liệu từ Excel không đủ. Vui lòng copy một dòng chứa họ tên và ít nhất 1 ngày học."
-      );
-      return;
-    }
-    // Phần đầu tiên là họ tên, các phần còn lại là ngày học
-    const studentName = parts[0];
-    currentStudentName = studentName; // Lưu tên học sinh vào biến toàn cục
-    let attendanceDates = parts.slice(1);
-
-    // Nếu một ngày học chỉ có dạng d/m (không có năm) thì thêm năm hiện tại
+    let validDates = [];
+    let paymentDate = "";
+    let isPaid = false;
     const currentYear = new Date().getFullYear();
-    attendanceDates = attendanceDates.map((dateStr) => {
-      const tokens = dateStr.split("/");
-      if (tokens.length === 2) {
-        return `${tokens[0]}/${tokens[1]}/${currentYear}`;
-      }
-      return dateStr;
-    });
 
-    // Tạo đối tượng biên lai
+    if (!excelData || !className || !amount) {
+      alert("⚠️ Vui lòng nhập đầy đủ thông tin!");
+      return;
+    }
+
+    const parts = excelData.split(/\t+|\s+/).filter(Boolean);
+    if (parts.length < 2 || !/[a-zA-Z]/.test(parts[0])) {
+      alert("❌ Dữ liệu từ Excel không hợp lệ.");
+      return;
+    }
+
+    for (let i = 0; i < parts.length; i++) {
+      if (parts[i].toLowerCase().includes("đóng")) {
+        isPaid = true;
+        paymentDate = parts[i + 1] || "";
+        break;
+      }
+      const hasK = parts[i].startsWith("k");
+      const tokens = parts[i].replace("k", "").split("/");
+      if (tokens.length === 2) {
+        const day = parseInt(tokens[0], 10);
+        const month = parseInt(tokens[1], 10);
+        if (isValidDate(day, month, currentYear)) {
+          validDates.push({
+            date: `${tokens[0].padStart(2, "0")}/${tokens[1].padStart(
+              2,
+              "0"
+            )}/${currentYear}`,
+            status: hasK ? "Nghỉ không phép" : "Có học",
+          });
+        }
+      } else {
+        studentName += (studentName ? " " : "") + parts[i];
+      }
+    }
+
+    validDates.sort(
+      (a, b) =>
+        new Date(a.date.split("/").reverse().join("/")) -
+        new Date(b.date.split("/").reverse().join("/"))
+    );
     const receipt = {
+      currentStudentName,
       studentName,
       className,
       amount,
-      attendanceDates,
+      attendanceDates: validDates,
+      isPaid,
+      paymentDate,
     };
-
-    // Tính toán sắp xếp các ngày và xác định số buổi, ngày đầu và ngày cuối
-    if (receipt.attendanceDates.length > 0) {
-      const datesWithObj = receipt.attendanceDates.map(function (dateStr) {
-        const parts = dateStr.split("/");
-        const day = parseInt(parts[0], 10);
-        const month = parseInt(parts[1], 10);
-        const year = parts[2];
-        return { original: dateStr, dateObj: new Date(year, month - 1, day) };
-      });
-      datesWithObj.sort((a, b) => a.dateObj - b.dateObj);
-      sortedDates = datesWithObj.map((item) => item.original);
-      totalSessions = sortedDates.length;
-      startDate = sortedDates[0];
-      endDate = sortedDates[sortedDates.length - 1];
-    }
-
-    // Render hóa đơn và hiển thị container hóa đơn
-    renderInvoice({ studentName, className, amount, attendanceDates });
+    renderInvoice(receipt);
     invoiceContainer.style.display = "block";
+    currentStudentName = studentName;
   });
 
-  // Hàm tạo nội dung hóa đơn
+  // Nút "Tạo hóa đơn":
   function renderInvoice(data) {
     let html = "";
 
+    html +=
+      '<p style="text-align: right;"><i>Ngày Lập: ' +
+      new Date().toLocaleDateString("vi-VN") +
+      "</i></p>";
+    html += "<br>";
+
     // Header hóa đơn
     html += '<div class="invoice-header">';
-    html += "<h1>BIÊN LAI HỌC PHÍ</h1>";
+    html += "<h2 style='text-align: center;'>BIÊN LAI HỌC PHÍ</h2>";
     html += "</div>";
+    html += "<br>";
 
     // Thông tin hóa đơn
     html += '<div class="invoice-details">';
-    html +=
-      "<p><strong>Ngày Lập:</strong> " +
-      new Date().toLocaleDateString("vi-VN") +
-      "</p>";
     html += "</div>";
 
-    // Thông tin học sinh
-    html += '<div class="student-info">';
-    html += "<p><strong>Học sinh:</strong> " + data.studentName + "</p>";
-    html += "<p><strong>Lớp:</strong> " + data.className + "</p>";
-    html += "</div>";
-
-    // Thông tin thanh toán
-    html += '<div class="payment-info">';
-    html +=
-      "<p><strong>Số tiền:</strong> " +
-      data.amount.toLocaleString("vi-VN") +
-      " đ</p>";
-    html +=
-      "<p><strong>Nội dung:</strong> Thu học phí " +
-      totalSessions +
-      " buổi từ " +
-      startDate +
-      " đến " +
-      endDate +
-      "</p>";
-    html += "</div>";
-
-    // Bảng điểm danh
-    html += '<div class="attendance-table">';
+    html += `<p><strong>Học sinh:</strong> ${data.studentName}</p>`;
+    html += `<p><strong>Lớp:</strong> ${data.className}</p>`;
+    html += `<p><strong>Số tiền:</strong> ${data.amount.toLocaleString(
+      "vi-VN"
+    )} đ</p>`;
     html += "<h3>Bảng điểm danh</h3>";
-    html += "<table>";
     html +=
-      '<thead><tr style="background-color: #f5f5f5;"><th>STT</th><th>Ngày</th><th>Trạng thái</th></tr></thead>';
-    html += "<tbody>";
-    sortedDates.forEach(function (date, index) {
-      html += "<tr>";
-      html += '<td style="padding:8px;">' + (index + 1) + "</td>";
-      html += '<td style="padding:8px;">' + date + "</td>";
-      html += '<td style="padding:8px;">Có học</td>';
-      html += "</tr>";
+      "<table style='margin: auto;'><thead><tr><th style='text-align: center;'>Buổi</th><th style='text-align: center;'>Ngày</th><th style='text-align: center;'>Trạng thái</th></tr></thead><tbody>";
+    data.attendanceDates.forEach((entry, index) => {
+      html += `<tr><td style="text-align: center;">${
+        index + 1
+      }</td><td style="text-align: center;">${
+        entry.date
+      }</td><td style="text-align: center;">${entry.status}</td></tr>`;
     });
     html += "</tbody></table>";
-    html += "</div>";
 
-    // Thông tin thanh toán với mã QR
-    html += '<div class="qr-section">';
-    html += "<h4>Quét mã để thanh toán</h4>";
-    html += '<img src="qr.png" alt="QR Code"/>';
-    html += "<p>Vietcombank</p>";
-    html += "<p>Số tài khoản: 1020102766</p>";
-    html += "<p>Chủ tài khoản: Nguyen Hue Thien</p>";
-    html += "</div>";
+    if (data.isPaid) {
+      html += "<br>";
 
-    html += "</div>";
+      html += `<p><i>* Đã thanh toán ngày: ${
+        data.paymentDate || "Không rõ"
+      }</i></p>`;
+
+      html += "<br>";
+    } else {
+      // Thông tin thanh toán với mã QR
+      html += "<br>";
+      html += '<div class="qr-section">';
+      html += "<h4>Quét mã để thanh toán</h4>";
+      html += '<img src="qr.png" alt="QR Code"/>';
+      html += '<p style="margin: 2px 0;">Vietcombank</p>';
+      html += '<p style="margin: 2px 0;">1020102766</p>';
+      html += '<p style="margin: 2px 0;">Nguyen Hue Thien</p>';
+    }
 
     receiptDiv.innerHTML = html;
   }
 
-  // Tải hóa đơn dưới dạng ảnh PNG
+  // Nút "Tải hóa đơn":
   downloadButton.addEventListener("click", function () {
-    const receiptElement = document.getElementById("receipt");
-    if (!receiptElement) {
-      alert("⚠ Vui lòng tạo hóa đơn trước khi tải xuống!");
+    if (
+      !invoiceContainer.style.display ||
+      invoiceContainer.style.display === "none"
+    ) {
+      alert("⚠ Không có dữ liệu hóa đơn để tải xuống!");
       return;
     }
-    // Đảm bảo startDate có giá trị hợp lệ trước khi sử dụng
-    if (!startDate) {
-      alert("⚠ Không có ngày học hợp lệ để tải hóa đơn!");
-      return;
-    }
-    const parts = startDate.split("/");
-    const reversed = parts.slice().reverse().join("-");
-    const firstDate = new Date(reversed);
-    const monthYear = firstDate.getMonth() + 1 + "-" + firstDate.getFullYear();
-    // Sử dụng currentStudentName thay cho studentNameInput.value
-    const fileName =
-      currentStudentName.replace(/\s+/g, "_") +
-      "_Thu_hoc_phi_thang_" +
-      monthYear +
-      ".png";
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+
+    const fileName = `${currentStudentName.replace(
+      /\s+/g,
+      "_"
+    )}_bien_lai_${month}_${year}.png`;
 
     htmlToImage
-      .toPng(receiptElement)
+      .toPng(receiptDiv, { quality: 1, pixelRatio: 2 })
       .then(function (dataUrl) {
-        download(dataUrl, fileName);
+        const link = document.createElement("a");
+        link.href = dataUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       })
       .catch(function (error) {
         console.error("❌ Lỗi khi tạo ảnh:", error);
@@ -204,13 +197,23 @@ document.addEventListener("DOMContentLoaded", function () {
       });
   });
 
-  // Nút "Biên Lai Mới": reset các trường Excel và lớp (giữ số tiền)
+  // Nút "+100k":
+  increaseButton.addEventListener("click", function () {
+    amountInput.value = (parseInt(amountInput.value, 10) || 0) + 100000;
+  });
+
+  // Nút "-100k":
+  decreaseButton.addEventListener("click", function () {
+    const newValue = (parseInt(amountInput.value, 10) || 0) - 100000;
+    amountInput.value = newValue >= 0 ? newValue : 0;
+  });
+
+  // Nút "Biên Lai Mới":
   resetButton.addEventListener("click", function () {
     receiptDiv.innerHTML = "";
     invoiceContainer.style.display = "none";
     excelDataInput.value = "";
     classNameInput.value = "";
-    // currentStudentName cũng được reset
     currentStudentName = "";
   });
 });

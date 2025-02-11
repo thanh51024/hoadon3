@@ -87,7 +87,10 @@ button.small-button {
 .attendance-table,
 .qr-section,
 .invoice-footer {
-  margin-bottom: 15px;
+  margin-bottom: 5px;
+}
+.qr-section {
+  margin-bottom: 0px;
 }
 .invoice-header h1 {
   text-align: center;
