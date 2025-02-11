@@ -76,8 +76,10 @@ button.small-button {
   background-color: white;
   border: 1px solid #ccc;
   border-radius: 5px;
-  /*width: 560px; /* Cố định chiều rộng */
+  width: 560px; /* Cố định bề ngang */
+  min-height: 900px; /* Tránh bị thu hẹp chiều dọc */
   overflow: hidden; /* Ẩn hoàn toàn thanh cuộn */
+  display: block; /* Đảm bảo không bị co lại do flex/grid */
 }
 
 .invoice-header,
