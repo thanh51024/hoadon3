@@ -71,12 +71,23 @@ document.addEventListener("DOMContentLoaded", function () {
       if (tokens.length === 2) {
         const day = parseInt(tokens[0], 10);
         const month = parseInt(tokens[1], 10);
-        if (isValidDate(day, month, currentYear)) {
+        let year = currentYear;
+
+        // Nếu ngày tháng nhập vào lớn hơn ngày tháng hiện tại, gán năm là năm trước
+        const currentDate = new Date();
+        if (
+          month > currentDate.getMonth() + 1 ||
+          (month === currentDate.getMonth() + 1 && day > currentDate.getDate())
+        ) {
+          year = currentYear - 1;
+        }
+
+        if (isValidDate(day, month, year)) {
           validDates.push({
             date: `${tokens[0].padStart(2, "0")}/${tokens[1].padStart(
               2,
               "0"
-            )}/${currentYear}`,
+            )}/${year}`,
             status: hasK ? "Nghỉ không phép" : "Có học",
           });
         }
