@@ -106,42 +106,6 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
-    // for (let i = 0; i < parts.length; i++) {
-    //   if (parts[i].toLowerCase().includes("đóng")) {
-    //     isPaid = true;
-    //     paymentDate = parts[i + 1] || "";
-    //     break;
-    //   }
-    //   const hasK = parts[i].startsWith("k");
-    //   const tokens = parts[i].replace("k", "").split("/");
-    //   if (tokens.length === 2) {
-    //     const day = parseInt(tokens[0], 10);
-    //     const month = parseInt(tokens[1], 10);
-    //     let year = currentYear;
-
-    //     // Nếu ngày tháng nhập vào lớn hơn ngày tháng hiện tại, gán năm là năm trước
-    //     const currentDate = new Date();
-    //     if (
-    //       month > currentDate.getMonth() + 1 ||
-    //       (month === currentDate.getMonth() + 1 && day > currentDate.getDate())
-    //     ) {
-    //       year = currentYear - 1;
-    //     }
-
-    //     if (isValidDate(day, month, year)) {
-    //       validDates.push({
-    //         date: `${tokens[0].padStart(2, "0")}/${tokens[1].padStart(
-    //           2,
-    //           "0"
-    //         )}/${year}`,
-    //         status: hasK ? "Nghỉ không phép" : "Có học",
-    //       });
-    //     }
-    //   } else {
-    //     studentName += (studentName ? " " : "") + parts[i];
-    //   }
-    // }
-
     validDates.sort(
       (a, b) =>
         new Date(a.date.split("/").reverse().join("/")) -
