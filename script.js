@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let validDates = [];
     let paymentDate = "";
     let isPaid = false;
-    const currentYear = new Date().getFullYear();
+    //const currentYear = new Date().getFullYear();
 
     if (!excelData || !className || !amount) {
       alert("⚠️ Vui lòng nhập đầy đủ thông tin!");
@@ -60,34 +60,44 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
+   //const invoiceType = document.querySelector('input[name="invoiceType"]:checked').value;
+   const invoiceRadio = document.querySelector('input[name="invoiceType"]:checked');
+   const invoiceType = invoiceRadio ? invoiceRadio.value : "past"; // Mặc định là quá khứ
+   
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+
     for (let i = 0; i < parts.length; i++) {
       if (parts[i].toLowerCase().includes("đóng")) {
         isPaid = true;
         paymentDate = parts[i + 1] || "";
         break;
       }
+
       const hasK = parts[i].startsWith("k");
       const tokens = parts[i].replace("k", "").split("/");
+
       if (tokens.length === 2) {
         const day = parseInt(tokens[0], 10);
         const month = parseInt(tokens[1], 10);
         let year = currentYear;
 
-        // Nếu ngày tháng nhập vào lớn hơn ngày tháng hiện tại, gán năm là năm trước
-        const currentDate = new Date();
-        if (
-          month > currentDate.getMonth() + 1 ||
-          (month === currentDate.getMonth() + 1 && day > currentDate.getDate())
-        ) {
-          year = currentYear - 1;
+        if (invoiceType === "past") {
+          // Nếu chọn quá khứ: giữ logic cũ
+          if (
+            month > currentDate.getMonth() + 1 ||
+            (month === currentDate.getMonth() + 1 && day > currentDate.getDate())
+          ) {
+            year = currentYear - 1;
+          }
+        } else if (invoiceType === "future") {
+          // Nếu chọn tương lai: luôn dùng năm hiện tại
+          year = currentYear;
         }
 
         if (isValidDate(day, month, year)) {
           validDates.push({
-            date: `${tokens[0].padStart(2, "0")}/${tokens[1].padStart(
-              2,
-              "0"
-            )}/${year}`,
+            date: `${tokens[0].padStart(2, "0")}/${tokens[1].padStart(2, "0")}/${year}`,
             status: hasK ? "Nghỉ không phép" : "Có học",
           });
         }
@@ -95,6 +105,42 @@ document.addEventListener("DOMContentLoaded", function () {
         studentName += (studentName ? " " : "") + parts[i];
       }
     }
+
+    // for (let i = 0; i < parts.length; i++) {
+    //   if (parts[i].toLowerCase().includes("đóng")) {
+    //     isPaid = true;
+    //     paymentDate = parts[i + 1] || "";
+    //     break;
+    //   }
+    //   const hasK = parts[i].startsWith("k");
+    //   const tokens = parts[i].replace("k", "").split("/");
+    //   if (tokens.length === 2) {
+    //     const day = parseInt(tokens[0], 10);
+    //     const month = parseInt(tokens[1], 10);
+    //     let year = currentYear;
+
+    //     // Nếu ngày tháng nhập vào lớn hơn ngày tháng hiện tại, gán năm là năm trước
+    //     const currentDate = new Date();
+    //     if (
+    //       month > currentDate.getMonth() + 1 ||
+    //       (month === currentDate.getMonth() + 1 && day > currentDate.getDate())
+    //     ) {
+    //       year = currentYear - 1;
+    //     }
+
+    //     if (isValidDate(day, month, year)) {
+    //       validDates.push({
+    //         date: `${tokens[0].padStart(2, "0")}/${tokens[1].padStart(
+    //           2,
+    //           "0"
+    //         )}/${year}`,
+    //         status: hasK ? "Nghỉ không phép" : "Có học",
+    //       });
+    //     }
+    //   } else {
+    //     studentName += (studentName ? " " : "") + parts[i];
+    //   }
+    // }
 
     validDates.sort(
       (a, b) =>
@@ -174,40 +220,6 @@ document.addEventListener("DOMContentLoaded", function () {
     receiptDiv.innerHTML = html;
   }
 
-  // Nút "Tải hóa đơn":
-  // downloadButton.addEventListener("click", function () {
-  //   if (
-  //     !invoiceContainer.style.display ||
-  //     invoiceContainer.style.display === "none"
-  //   ) {
-  //     alert("⚠ Không có dữ liệu hóa đơn để tải xuống!");
-  //     return;
-  //   }
-  //   const now = new Date();
-  //   const month = now.getMonth() + 1;
-  //   const year = now.getFullYear();
-
-  //   const fileName = `${currentStudentName.replace(
-  //     /\s+/g,
-  //     "_"
-  //   )}_bien_lai_${month}_${year}.png`;
-
-  //   htmlToImage
-  //     .toPng(receiptDiv, { quality: 1, pixelRatio: 2 })
-  //     .then(function (dataUrl) {
-  //       const link = document.createElement("a");
-  //       link.href = dataUrl;
-  //       link.download = fileName;
-  //       document.body.appendChild(link);
-  //       link.click();
-  //       document.body.removeChild(link);
-  //     })
-  //     .catch(function (error) {
-  //       console.error("❌ Lỗi khi tạo ảnh:", error);
-  //       alert("Không thể tạo ảnh hóa đơn. Vui lòng thử lại!");
-  //     });
-  // });
-
   downloadButton.addEventListener("click", function () {
     if (
       !invoiceContainer.style.display ||
@@ -266,6 +278,7 @@ document.addEventListener("DOMContentLoaded", function () {
     amountInput.value = newValue >= 0 ? newValue : 0;
   });
 
+  const resetButton = document.getElementById("resetButton");
   // Nút "Biên Lai Mới":
   resetButton.addEventListener("click", function () {
     receiptDiv.innerHTML = "";
