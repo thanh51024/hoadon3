@@ -188,15 +188,6 @@ document.addEventListener("DOMContentLoaded", function () {
       }</i></p>`;
 
       html += "<br>";
-    } else {
-      // Thông tin thanh toán với mã QR
-      html += "<br>";
-      html += '<div class="qr-section">';
-      html += "<h4>Quét mã để thanh toán</h4>";
-      html += '<img src="./qr.png" alt="QR Code"/>';
-      html += '<p style="margin: 2px 0;">Vietcombank</p>';
-      html += '<p style="margin: 2px 0;">1020102766</p>';
-      html += '<p style="margin: 2px 0;">Nguyen Hue Thien</p>';
     }
 
     receiptDiv.innerHTML = html;
